@@ -41,7 +41,7 @@ Se tempo for curto, entregue na ordem `README.md:35-39` que o avaliador corrige:
 |---|---|---|---|
 | **6** | **Cache + Paralelismo `unit` vs `IT` + split `PR` vs `main`** | Só entra após pipeline correta. Otimizar pipeline errada (`package -DskipTests` antigo `:25`) só deixa erro mais rápido. `pom.xml:52-80` já separa `surefire (*Test)` e `failsafe (*IT)` → explorar paralelismo economiza ~60% sem perder cobertura. | P0 |
 
-Técnicas já embutidas no P0: `cache: maven` `:32,50,76,102`, jobs paralelos `needs: compile` `:39,65`, `concurrency.cancel-in-progress` `:15-17`.
+Implementado: `cache: maven` `:32,50,79,107`, `needs: compile` `:39,68` paralelos, `concurrency` `:15-17`, **P3 split** `integration if: push` `:67` + `package if: push && main` `:95` — validado `mvn test 13 OK` (PR ~2-3min) / `mvn verify 2 IT OK` (main ~7-8min). Viável: sem cortar `*IT`.
 
 ## P4 — Apresentação (final)
 
@@ -59,7 +59,7 @@ Técnicas já embutidas no P0: `cache: maven` `:32,50,76,102`, jobs paralelos `n
       -> 7. Otimização cache/paralelo (P3) -> 8. Slides (P4)
 ```
 
-**Status atual (após validação P2 2026-09-21):** P0 ✅ `124637b`, P1 ✅ `PROPOSTA.md:21` + `PROPOSTA.md:60` + `BRANCH_PROTECTION.md:13`, P2 ✅ `PROPOSTA.md:149` (5 justificativas com trade-off) — validado, P3 ✅ `ci.yaml:15-17,32,39,65`, P4 🔜 pendente (roteiro `PROPOSTA.md:187`)
+**Status atual (após P3 2026-09-21):** P0 ✅ `124637b`, P1 ✅ `PROPOSTA.md:21` + `PROPOSTA.md:60`, P2 ✅ `PROPOSTA.md:149`, P3 ✅ `ci.yaml:67,95` split PR (~2-3min `test`) vs main (~7-8min `verify+package`) + `cache: maven` + `concurrency` — validado, P4 🔜 pendente (`PROPOSTA.md:187`)
 
 ## Checklist de Decisão
 
@@ -68,5 +68,5 @@ Técnicas já embutidas no P0: `cache: maven` `:32,50,76,102`, jobs paralelos `n
 - [x] P1 Regras — `PROPOSTA.md:60` (8 regras: ordem, bloqueio, artefato, unit vs IT `pom.xml:52-80`, checks obrigatórios `BRANCH_PROTECTION.md:13`, locais proibidos, rastreabilidade `ci.yaml:118`, tempo `ci.yaml:32`) — validado 2026-09-21
 - [x] P1 Diagrama — `PROPOSTA.md:21` (Mermaid `compile -> unit || integration -> package` + variante 22min `PROPOSTA.md:47`) — validado 2026-09-21
 - [x] P2 Justificativa — `PROPOSTA.md:149` (5 porquês com alternativa rejeitada + trade-off: JAR falho `ci.yaml:105` vs reports `ci.yaml:56`, IT `pom.xml:64` vs PR `ci.yaml:4`, PR vermelha `BRANCH_PROTECTION.md:13`, api-sha `ci.yaml:118`, velocidade `ci.yaml:32` — validado 2026-09-21)
-- [x] P3 Cache/paralelismo — já em `ci.yaml:15-17,32,39,65`
+- [x] P3 Cache/paralelismo + split PR vs main — `ci.yaml:15-17,32,67,95` — PR `compile+unit` ~2-3min, main `compile+unit||integration+package` ~7-8min — validado 2026-09-21
 - [ ] P4 Slides — usar roteiro `PROPOSTA.md:187`

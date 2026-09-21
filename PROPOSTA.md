@@ -20,7 +20,7 @@ Projeto confirma separação correta em `pom.xml:52-80`: `maven-surefire-plugin`
 
 ## 2. Diagrama da Pipeline Proposta (Entrega 1)
 
-### Fluxo P0 implementado
+### Fluxo P0 implementado (base)
 
 ```mermaid
 flowchart TD
@@ -42,18 +42,33 @@ flowchart TD
     F1 -.-> R1[Upload surefire-reports / failsafe-reports - retention 3d - apenas diagnostico]
 ```
 
-**Leitura:** `compile` é o portão mais barato. `unit` e `integration` rodam **em paralelo** após `compile` (`needs: compile` em `.github/workflows/ci.yaml:39,65`). `package` só roda se ambos verdes (`needs: [unit-tests, integration-tests]` em `:91`). Nenhum JAR publicável é gerado em caso de falha.
+**Leitura:** `compile` é o portão mais barato. `unit` e `integration` rodam **em paralelo** após `compile` (`needs: compile` em `.github/workflows/ci.yaml:39,68`). `package` só roda se ambos verdes (`needs: [unit-tests, integration-tests]` em `:96`). Nenhum JAR publicável é gerado em caso de falha.
 
-### Fluxo otimizado para o desafio 22min (P3)
+### Fluxo P3 — Otimizado desafio 22min (split PR vs main) `ci.yaml:67,95`
 
+```mermaid
+flowchart TD
+    A1[Pull Request -> main] --> B1[compile: mvn clean compile]
+    B1 --> C1[unit-tests: mvn test]
+    C1 -->|verde| K1[Merge liberado - ~2-3min]
+    C1 -->|falha| F1[PR bloqueado]
+
+    A2[Push em main] --> B2[compile: mvn clean compile]
+    B2 --> C2[unit-tests: mvn test]
+    B2 --> D2[integration-tests: mvn verify]
+    C2 --> G2{Ambos verdes?}
+    D2 --> G2
+    G2 -->|sim| H2[package: mvn package]
+    H2 --> I2[api-SHA.jar + provenance]
+    G2 -->|nao| F2[Falha]
 ```
-PR (feedback < 3min)              main (completo ~7-8min)
- compile (1min)                    compile (1min)
-   |-> unit (1-2min)  ─┐            |-> unit (1-2min)  ─┐
-   |-> integration (3-5min) ─> package   |-> integration (3-5min) ─> package + provenance
- cache maven hit ~70%              cache maven hit ~70%
- concurrency: cancela runs antigos do mesmo ref
-```
+
+| Contexto | Jobs executados | Tempo | Gatilho `ci.yaml` |
+|---|---|---|---|
+| **PR** | `compile` + `unit-tests` | **~2-3min** (`test 13 OK`) | `pull_request [main]` + `integration if: push` (`:67`) skippado |
+| **main** | `compile` + `unit` \|\| `integration` + `package` | **~7-8min** (`verify 2 IT OK` + `package`) | `push [main]` + `package if: push && main` (`:95`) |
+
+Cache `maven` (`:32,50,79,107`), paralelismo (`needs: compile`), `concurrency` (`:15`) mantidos. 22min → PR rápido sem cortar `*IT.java` (`pom.xml:52-80`) — IT continua obrigatório em `main`.
 
 ---
 
@@ -107,17 +122,17 @@ Todos os 4 jobs como `required_status_checks` em `.github/BRANCH_PROTECTION.md:1
 - `actions/attest-build-provenance@v2` em `main` (`:123-126`) — garante que o JAR auditado veio da execução registrada
 - Futuro: `maven-git-commit-id-plugin` para injetar SHA no `MANIFEST.MF`/`/status`
 
-### 3.8 Redução de tempo sem remover verificações `README.md:30,107-113`
+### 3.8 Redução de tempo sem remover verificações `README.md:30,107-113` — P3 Viável
 
 | Técnica | Onde em `ci.yaml` | Ganho estimado |
 |---|---|---|
-| `setup-java cache: maven` | `:32,50,76,102` | -8 a -12min (evita baixar `~/.m2`) |
-| Jobs `unit`/`integration` paralelos | `:39,65` + `needs: compile` | -40% wall time |
+| `setup-java cache: maven` | `:32,50,79,107` | -8 a -12min (evita baixar `~/.m2`) |
+| Jobs `unit`/`integration` paralelos | `:39,68` + `needs: compile` | -40% wall time |
 | `concurrency.cancel-in-progress` | `:15-17` | -fila em push --force |
-| `retention-days` diferenciado | `:61,87,121` | -armazenamento/custo |
-| `pull_request` + `push main` (não todo push) | `:4-7` | -execuções desnecessárias |
+| `retention-days` diferenciado | `:61,86,122` | -armazenamento/custo |
+| **P3 split PR vs main** | `integration if: push` `:67`, `package if: push && main` `:95` | **PR ~2-3min**, main ~7-8min |
 
-Pipeline de 22min → ~7-8min sem cortar nenhum `*Test`/`*IT`. Pipeline rápida **não** é mais importante que completa (`README.md:105`): completude é garantida, velocidade vem de infra.
+**P3 — 22min → PR ~2-3min / main ~7-8min sem cortar `*Test`/`*IT` (`pom.xml:52-80`).** PR valida `compile + unit` (`mvn test 13 OK`); `main` valida completo `verify 2 IT OK` + `package`. Pipeline rápida **não** é mais importante que completa (`README.md:105`): completude garantida em `main`, velocidade vem de `cache` + `paralelismo` + `split`, não de remover testes. Viável e já validado local.
 
 ---
 
