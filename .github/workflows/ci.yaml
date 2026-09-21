@@ -11,7 +11,7 @@ permissions:
   attestations: write
   id-token: write
 
-# Cancela execuções antigas do mesmo branch/PR para economizar tempo (parte do desafio 22min)
+# Desafio 22min: cancela runs antigos do mesmo ref
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -49,10 +49,10 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Testes unitários (Surefire - *Test.java)
+      - name: Testes unitarios (Surefire - *Test.java)
         run: mvn -B test
 
-      - name: Publicar relatórios Surefire (diagnóstico apenas se falhar)
+      - name: Publicar relatorios Surefire (diagnostico apenas se falhar)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
@@ -62,6 +62,9 @@ jobs:
 
   integration-tests:
     name: Integration Tests
+    # P3 split PR vs main: IT so roda em push para main (feedback rapido no PR)
+    # PR valida compile + unit (~2-3min); main valida completo (~7-8min)
+    if: github.event_name == 'push'
     needs: compile
     runs-on: ubuntu-latest
     steps:
@@ -75,10 +78,10 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Testes de integração (Failsafe - *IT.java)
+      - name: Testes de integracao (Failsafe - *IT.java)
         run: mvn -B verify
 
-      - name: Publicar relatórios Failsafe (diagnóstico apenas se falhar)
+      - name: Publicar relatorios Failsafe (diagnostico apenas se falhar)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
@@ -88,6 +91,8 @@ jobs:
 
   package:
     name: Package & Publish
+    # So publicavel em push para main, apos todos os testes verdes
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [unit-tests, integration-tests]
     runs-on: ubuntu-latest
     steps:
@@ -101,7 +106,7 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Gerar JAR (só após testes verdes - sem -DskipTests)
+      - name: Gerar JAR (so apos testes verdes - sem -DskipTests)
         run: mvn -B package
 
       - name: Registrar commit no artefato (rastreabilidade)
@@ -110,6 +115,7 @@ jobs:
           echo "Commit: ${{ github.sha }}" >> target/commit.txt
           echo "Run: ${{ github.run_id }}-${{ github.run_number }}" >> target/commit.txt
           echo "Ref: ${{ github.ref }}" >> target/commit.txt
+          echo "Event: ${{ github.event_name }}" >> target/commit.txt
           cat target/commit.txt
 
       - name: Publicar artefato versionado por commit
@@ -121,7 +127,6 @@ jobs:
           retention-days: 14
 
       - name: Attest provenance (apenas em main - garante JAR veio da CI)
-        if: github.ref == 'refs/heads/main'
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: 'target/*.jar'
