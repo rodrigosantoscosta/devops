@@ -59,14 +59,14 @@ Técnicas já embutidas no P0: `cache: maven` `:32,50,76,102`, jobs paralelos `n
       -> 7. Otimização cache/paralelo (P3) -> 8. Slides (P4)
 ```
 
-**Status atual (após `b7bc998`):** P0 ✅ commitado, P1-P2 ✅ documentados em `PROPOSTA.md:1`, P3 ✅ já aplicado no YAML, P4 🔜 pendente (roteiro pronto).
+**Status atual (após `b7bc998` + validação P1 2026-09-21):** P0 ✅ commitado `124637b`, P1 ✅ validado — `PROPOSTA.md:21` Diagrama Mermaid + `PROPOSTA.md:60` Regras + `.github/BRANCH_PROTECTION.md:13` required checks, P2 ✅ `PROPOSTA.md:148`, P3 ✅ `ci.yaml:15-17,32,39,65`, P4 🔜 pendente (roteiro `PROPOSTA.md:187`)
 
 ## Checklist de Decisão
 
 - [x] P0 YAML bloqueante — `.github/workflows/ci.yaml:1`
 - [x] P0 Branch Protection — `.github/BRANCH_PROTECTION.md:1` (falta ativar no GitHub)
-- [x] P1 Regras — `PROPOSTA.md:60`
-- [x] P1 Diagrama — `PROPOSTA.md:21`
+- [x] P1 Regras — `PROPOSTA.md:60` (8 regras: ordem, bloqueio, artefato, unit vs IT `pom.xml:52-80`, checks obrigatórios `BRANCH_PROTECTION.md:13`, locais proibidos, rastreabilidade `ci.yaml:118`, tempo `ci.yaml:32`) — validado 2026-09-21
+- [x] P1 Diagrama — `PROPOSTA.md:21` (Mermaid `compile -> unit || integration -> package` + variante 22min `PROPOSTA.md:47`) — validado 2026-09-21
 - [x] P2 Justificativa — `PROPOSTA.md:148`
 - [x] P3 Cache/paralelismo — já em `ci.yaml:15-17,32,39,65`
 - [ ] P4 Slides — usar roteiro `PROPOSTA.md:187`
