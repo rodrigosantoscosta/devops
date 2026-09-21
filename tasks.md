@@ -59,7 +59,7 @@ Implementado: `cache: maven` `:32,50,79,107`, `needs: compile` `:39,68` paralelo
       -> 7. Otimização cache/paralelo (P3) -> 8. Slides (P4)
 ```
 
-**Status atual (após P3 2026-09-21):** P0 ✅ `124637b`, P1 ✅ `PROPOSTA.md:21` + `PROPOSTA.md:60`, P2 ✅ `PROPOSTA.md:149`, P3 ✅ `ci.yaml:67,95` split PR (~2-3min `test`) vs main (~7-8min `verify+package`) + `cache: maven` + `concurrency` — validado, P4 🔜 pendente (`PROPOSTA.md:187`)
+**Status atual (após edge cases 2026-09-21 devs):** P0 ✅ `124637b`, P1 ✅ `PROPOSTA.md:21` + `PROPOSTA.md:60`, P2 ✅ `PROPOSTA.md:149`, P3 ✅ `ci.yaml:67,95` split PR (~2-3min) vs main (~7-8min), **testes 45 unit + 6 IT = 51** (`CIPipelineCasesTest:14` + `CIPipelineEdgeCasesTest:12`) — faltam 3 opcionais (ver `PROPOSTA.md:9`), P4 🔜 pendente (`PROPOSTA.md:187`)
 
 ## Checklist de Decisão
 

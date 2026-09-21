@@ -183,17 +183,17 @@ Diferença para o ponto de partida (`.github/workflows/ci.yaml` antigo `:22-31`)
 |---|---|---|
 | 1. Diagrama | ✅ Entregue | Este doc §2 (Mermaid) |
 | 2. Regras do processo | ✅ Entregue | Este doc §3 + `.github/BRANCH_PROTECTION.md:1` |
-| 3. YAML | ✅ Implementado e commitado | `.github/workflows/ci.yaml:1` (`124637b`) |
+| 3. YAML | ✅ Implementado e commitado | `.github/workflows/ci.yaml:1` (`124637b` + P3 `dc2f4ef`) |
 | 4. Justificativa | ✅ Entregue | Este doc §5 |
 | 5. Apresentação 8-10min | 🔜 Roteiro abaixo | — |
 
-### P0 (já commitado `124637b`)
+### P0-P3 (testes 45 unit + 6 IT validados em `devs`)
 
-- [x] Reescrita do YAML com 4 jobs bloqueantes, `cache: maven`, `needs`, `api-sha`, `provenance`
-- [x] Branch protection documentada
-- [x] Validação local: `mvn test 13 OK`, `mvn verify 2 IT OK`, `mvn package OK` (Java 23 com `release 21`)
+- [x] YAML 4 jobs bloqueantes, `cache: maven`, `needs`, `api-sha`, `provenance`, split PR vs main `ci.yaml:67,95`
+- [x] Branch protection documentada `BRANCH_PROTECTION.md:13` (PR: Compile+Unit; main: +Integration+Package)
+- [x] Validação local: `mvn test 45 OK`, `mvn verify 51 OK` (6 IT + 45 unit) — ver §9 Cobertura CI
 
-### Próximos passos (P1-P3)
+### Próximos passos (P4)
 
 - [ ] Ativar branch protection em `Settings > Branches` (1 min, conforme `.github/BRANCH_PROTECTION.md:5`)
 - [ ] Slides 8-10min (roteiro sugerido §7)
@@ -219,12 +219,48 @@ Diferença para o ponto de partida (`.github/workflows/ci.yaml` antigo `:22-31`)
 # Local (reproduz a CI)
 $env:JAVA_HOME="C:\Program Files\Java\jdk-23"
 .\mvnw.cmd clean compile
-.\mvnw.cmd test        # Surefire *Test.java
-.\mvnw.cmd verify      # Failsafe *IT.java
+.\mvnw.cmd test        # Surefire *Test.java -> 45 OK em devs
+.\mvnw.cmd verify      # Failsafe *IT.java -> 6 IT + 45 unit = 51 OK
 .\mvnw.cmd package     # só após testes verdes
 Get-ChildItem target/*.jar
 
 # CI
-# Push em branch -> PR para main -> verificar 4 checks verdes + artefato api-<sha>.jar
+# Push em branch -> PR para main -> verificar checks verdes + artefato api-<sha>.jar
+# PR devs: Compile + Unit (~2-3min); push devs/main: + Integration + Package (~7-8min)
 # Tentar merge com teste quebrado -> botão Merge bloqueado
 ```
+
+---
+
+## 9. Cobertura CI — Casos de Teste (branch `devs`)
+
+### Inventário (51 testes = 45 unit Surefire + 6 IT Failsafe `pom.xml:52-80`)
+
+| # | Arquivo | Tipo | Casos cobertos `README.md:22-31,99-105` | Qtd |
+|---|---|---|---|---|
+| 1 | `StatusServiceTest.java:10` | unit | Mensagem bloqueante `compile` | 1 |
+| 2 | `StatusResponseTest.java:10` | unit | Record igualdade/hash | 2 |
+| 3 | `StatusControllerTest.java:11` | unit | Timestamp ISO8601, proximidade, delegação service | 3 |
+| 4 | `StatusControllerIT.java:21` | IT | `GET /status` 200 + body | 1 |
+| 5 | `ReleaseValidationServiceTest.java:10` | unit | 4 regras isoladas + todos motivos | 6 |
+| 6 | `ReleaseValidationRequestTest.java:10` | unit | Record request | 3 |
+| 7 | `ReleaseValidationResponseTest.java:10` | unit | Record response + imutabilidade | 3 |
+| 8 | `ReleaseValidationControllerIT.java:22` | IT | `POST /validate` happy + 4 rejeições | 5 |
+| 9 | `CIPipelineCasesTest.java:20` | unit | Pipeline verde/vermelha + rastreabilidade (param 5 versões Java) | 14 |
+| 10 | `CIPipelineEdgeCasesTest.java:12` | unit | Edge: commit blank/null/`\t`, imutabilidade `List.copyOf:27`, contrato `/status`, ordem reasons | 12 |
+
+### Próximo lote (este commit)
+`CIPipelineEdgeCasesTest.java:12` cobre **7 faltantes** identificados após `CIPipelineCasesTest`:
+- `@NullAndEmptySource + @ValueSource(\" \",\"  \",\"\\t\",\"\\n\")` para `isBlank` `ReleaseValidationService.java:14` (faltava `""`, `\t`, `\n`)
+- `commit " abc1234 "` com espaços deve passar (trim não existe — aceito)
+- `reasons` imutável (`List.copyOf:27`) — `UnsupportedOperationException` em lista vazia e cheia
+- Contrato `/status`: `status`/`generatedAt` não nulos + `Instant.parse`
+- Ordem exata de `reasons` (4 mensagens em sequência do `service`)
+
+### Quantos faltam
+**Faltam 3** de baixa prioridade (não bloqueantes para entrega `README.md:35-39`):
+1. `IT`: `POST /releases/validate` com payload malformado (JSON inválido → 400) — exige `MockMvc` ou `HttpClient` com body quebrado; opcional pois Spring já retorna 400
+2. `Unit`: `DevopsApplicationTests` com `WebEnvironment.MOCK` vs `RANDOM_PORT` — duplicado do `contextLoads` já existente
+3. `IT` de performance: medir que `cache: maven` + `concurrency` realmente reduzem 22min → só validável no GitHub Actions, não local
+
+Todos os 9 requisitos da missão e 6 provocações `README.md:99-105` já têm cobertura direta.
