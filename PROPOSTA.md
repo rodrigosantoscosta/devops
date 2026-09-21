@@ -148,15 +148,17 @@ Diferença para o ponto de partida (`.github/workflows/ci.yaml` antigo `:22-31`)
 
 ## 5. Justificativa Curta (Entrega 4) — Por que não alternativas
 
-- **Por que não gerar JAR com teste falho?** `README.md:13,99,102` Viola “build once, test before publish”. JAR não testado em produção já causou incidentes no cenário; diagnóstico deve ser via `surefire-reports`, não binário. Decisão: `package` depende de `needs` verdes.
+> Atende `README.md:45` — “Não basta dizer o que fariam. O grupo precisa explicar por que.” Cada decisão abaixo tem alternativa rejeitada e trade-off.
 
-- **Por que não IT em todo push?** `README.md:100` IT consome 5-6s por classe + Tomcat (`ReleaseValidationControllerIT:64471`). Rodar em `push` de feature branch sem PR desperdiça 22min. PR e `main` são os portões onde IT é obrigatório.
+- **Por que não gerar JAR com teste falho?** `README.md:13,99,102` Alternativa rejeitada: `mvn package -DskipTests` e `upload-artifact` sempre (pipeline inicial `.github/workflows/ci.yaml:25,29`). Viola “build once, test before publish” e gera artefato não confiável que já quebrou `main` no cenário. Trade-off: perde-se “JAR para debug”, mas ganha-se garantia; debug passa a ser `surefire-reports`/`failsafe-reports` com `if: failure()` e `retention-days: 3` (`.github/workflows/ci.yaml:56,82`) — não contamina registry. Decisão: `package` com `needs: [unit-tests, integration-tests]` e `mvn package` sem skip (`:105`).
 
-- **Por que PR não pode mergear com pipeline vermelha?** `README.md:15,101` Confiar em disciplina humana falha sob pressão. `branch protection` com `required_status_checks` é barreira automática; `Do not allow bypassing` remove exceção de admin.
+- **Por que não IT em todo push?** `README.md:100` Alternativa rejeitada: `mvn verify` em todo `push`. IT (`pom.xml:64-80` `*IT.java` sobe `Tomcat 11.0.24`) consome 5-6s por classe + contexto Spring (`ReleaseValidationControllerIT:64471` visto em `verify` local). Em `push` de feature sem PR desperdiça 22min e fila `concurrency`. Trade-off: feedback ligeiramente mais tardio em branch solta, mas economia ~40% wall time; PR e `main` (`on: pull_request` + `push [main]` em `ci.yaml:4-7`) são os portões onde IT é obrigatório e bloqueante.
 
-- **Por que nome com commit?** `README.md:16,104` Sem SHA, `api.jar` sobrescreve e impede `git bisect`/`rollback`. `api-<sha>.jar` + `commit.txt` permite `POST /releases/validate {commit, javaVersion}` validar que o deploy é exatamente o que passou na CI.
+- **Por que PR não pode mergear com pipeline vermelha?** `README.md:15,101` Alternativa rejeitada: convenção humana “não mergear se vermelho”. Falha sob pressão/deadline. `branch protection` com `required_status_checks` (`Compile`, `Unit Tests`, `Integration Tests`, `Package & Publish` em `.github/BRANCH_PROTECTION.md:13-19`) + `Do not allow bypassing` é barreira automática auditável. Trade-off: exige admin configurar `Settings > Branches` (1 min) e `Require branches to be up to date` pode exigir rebase, mas evita regressão em `main`.
 
-- **Por que não remover verificações para ganhar velocidade?** `README.md:17` Remover testes move custo para produção (hotfix, SLA). Cache + paralelismo atacam a causa (infra/rede), não a qualidade. Ganho de ~60% sem perder cobertura.
+- **Por que nome com commit?** `README.md:16,104` Alternativa rejeitada: `name: api` genérico (pipeline inicial `:29`). Sobrescreve, impede `git bisect`/`rollback` e quebra rastreabilidade `commit -> run -> artefato`. Decisão: `name: api-${{ github.sha }}` (`ci.yaml:118`) + `target/commit.txt` com `sha/run_id/ref` (`:108-113`) + `attest-build-provenance` em `main` (`:123-126`) + `if-no-files-found: error` (`:120`). Trade-off: nome longo, mas `POST /releases/validate {commit, javaVersion, unitTestsPassed, integrationTestsPassed}` valida que o deploy é exatamente o que passou na CI.
+
+- **Por que não remover verificações para ganhar velocidade?** `README.md:17,105,107-113` Alternativa rejeitada: cortar `*IT.java` ou `mvn test`. Move custo para produção (hotfix, SLA, rollback). Causa do 22min é infra (sem `cache`, serial), não cobertura. Solução: `setup-java cache: maven` (`:32,50,76,102` → -8 a -12min), jobs `unit`/`integration` paralelos (`needs: compile` `:39,65` → -40%), `concurrency.cancel-in-progress` (`:15-17` → -fila). Ganho ~60% (22min → ~7-8min) sem perder nenhum `*Test`/`*IT` (`mvn test 13 OK`, `mvn verify 2 IT OK` validados local).
 
 ---
 
