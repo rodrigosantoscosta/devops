@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  attestations: write
+  id-token: write
+
+# Cancela execuções antigas do mesmo branch/PR para economizar tempo (parte do desafio 22min)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile:
+    name: Compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Compilar
+        run: mvn -B clean compile
+
+  unit-tests:
+    name: Unit Tests
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Testes unitários (Surefire - *Test.java)
+        run: mvn -B test
+
+      - name: Publicar relatórios Surefire (diagnóstico apenas se falhar)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-${{ github.sha }}
+          path: target/surefire-reports/
+          retention-days: 3
+
+  integration-tests:
+    name: Integration Tests
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Testes de integração (Failsafe - *IT.java)
+        run: mvn -B verify
+
+      - name: Publicar relatórios Failsafe (diagnóstico apenas se falhar)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failsafe-reports-${{ github.sha }}
+          path: target/failsafe-reports/
+          retention-days: 3
+
+  package:
+    name: Package & Publish
+    needs: [unit-tests, integration-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Gerar JAR (só após testes verdes - sem -DskipTests)
+        run: mvn -B package
+
+      - name: Registrar commit no artefato (rastreabilidade)
+        run: |
+          echo "${{ github.sha }}" > target/commit.txt
+          echo "Commit: ${{ github.sha }}" >> target/commit.txt
+          echo "Run: ${{ github.run_id }}-${{ github.run_number }}" >> target/commit.txt
+          echo "Ref: ${{ github.ref }}" >> target/commit.txt
+          cat target/commit.txt
+
+      - name: Publicar artefato versionado por commit
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-${{ github.sha }}
+          path: target/*.jar
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Attest provenance (apenas em main - garante JAR veio da CI)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'target/*.jar'
