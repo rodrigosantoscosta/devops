@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, master, devs]
   pull_request:
-    branches: [main]
+    branches: [main, master, devs]
 
 permissions:
   contents: read
@@ -62,8 +62,7 @@ jobs:
 
   integration-tests:
     name: Integration Tests
-    # P3 split PR vs main: IT so roda em push para main (feedback rapido no PR)
-    # PR valida compile + unit (~2-3min); main valida completo (~7-8min)
+    # P3 split PR vs main: IT so roda em push (feedback rapido no PR: compile+unit ~2-3min; push valida completo ~7-8min)
     if: github.event_name == 'push'
     needs: compile
     runs-on: ubuntu-latest
@@ -91,8 +90,8 @@ jobs:
 
   package:
     name: Package & Publish
-    # So publicavel em push para main, apos todos os testes verdes
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # So publicavel em push para main/master/devs, apos todos os testes verdes
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devs')
     needs: [unit-tests, integration-tests]
     runs-on: ubuntu-latest
     steps:
