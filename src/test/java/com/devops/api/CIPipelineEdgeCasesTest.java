@@ -38,9 +38,12 @@ class CIPipelineEdgeCasesTest {
 
 		@Test
 		void commitComEspacosNasPontasDeveSerAceito() {
+			// INTENCIONALMENTE QUEBRADO PARA DEMONSTRAR PIPELINE VERMELHA NO GITHUB ACTIONS
+			// isBlank() rejeita " abc1234 " como valido, mas expectativa errada força falha em Unit Tests
 			ReleaseValidationRequest req = new ReleaseValidationRequest(" abc1234 ", 21, true, true);
 			ReleaseValidationResponse res = service.validate(req);
-			assertThat(res.approved()).isTrue();
+			assertThat(res.approved()).isFalse();
+			assertThat(res.reasons()).contains("O commit e obrigatorio");
 		}
 	}
 
