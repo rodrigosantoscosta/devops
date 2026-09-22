@@ -20,6 +20,8 @@ gitGraph
   commit id:"4a843c8 merge master"
   commit id:"b324701 devs verde"
   commit id:"5e6e0f4 restore trigger"
+  commit id:"9119257 README resolucao"
+  commit id:"8f4868e handover+PROPOSTA"
   checkout master
   commit id:"ee86073 master FAIL"
   commit id:"914927a handover"
@@ -39,10 +41,10 @@ gitGraph
 
 ## 3. Próxima sessão — Checklist restante
 
-1. **P4 Slides 8-10min:** usar roteiro `PROPOSTA.md:187` (1min cenário `README.md:11-17`, 3min decisões, 2min `ci.yaml`, 1min protection, 1min 22→7min, 1min rastreabilidade `api-sha`+`POST /releases/validate`)
-2. **Validar branch protection:** abrir PR com teste quebrado → Merge deve ficar bloqueado (`BRANCH_PROTECTION.md:32`)
-3. **Merge `devs`→`master`** se quiser trazer os 51 testes (45 unit + 6 IT) para master — hoje master tem só 19 unit
-4. **Opcional:** `maven-git-commit-id-plugin` para `GET /status` expor SHA; fechar 3 faltantes se quiser 100% (não bloqueia entrega `README.md:35-39`)
+1. **PR #1 `devs`→`master` aberto:** https://github.com/rodrigosantoscosta/devops/pull/1 — checks `Compile`+`Unit Tests` verdes (`reviewDecision: REVIEW_REQUIRED`). **Não pode self-approve** (GitHub proíbe autor aprovar o próprio PR; `enforce_admins` impede bypass). Merge exige 2ª conta/revisor OU aprovação manual de outro usuário.
+2. **P4 Slides 8-10min:** usar roteiro `PROPOSTA.md` §7 (1min cenário, 3min decisões, 2min `ci.yaml`, 1min protection, 1min 22→7min, 1min rastreabilidade)
+3. **Validar branch protection:** já parcialmente validada (PR aberto sem approval → merge bloqueado). Testar com PR de teste quebrado se quiser demo explícita (`BRANCH_PROTECTION.md`).
+4. **Opcional:** `maven-git-commit-id-plugin` para `GET /status` expor SHA; 3 testes faltantes de baixa prioridade (ver `PROPOSTA.md` §9)
 
 ## 4. Comandos úteis
 
@@ -57,9 +59,10 @@ git log --oneline --all --graph -12
 
 ## 5. Riscos
 
-- Protection em `master` com `enforce_admins: true` — pushes diretos em `master` serão **rejeitados**; fluxo agora é PR → `devs`/feature → merge
+- Protection em `master` com `enforce_admins: true` — pushes diretos em `master` são **rejeitados**; fluxo é PR → review → merge
+- **Self-approve proibido** — merge de PR #1 (e futuros) precisa de 2ª identidade/reviewer no repo
 - `ci.yaml:5` inclui `devs` — ao definir `main` como default final, ajuste para `[main]` e package `refs/heads/main`
-- JDK local agora é Temurin 21 (winget), não mais `jdk-23`
+- JDK local é Temurin 21 (winget), não `jdk-23`
 
 ## 6. Contatos
 
