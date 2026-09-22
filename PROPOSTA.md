@@ -1,6 +1,8 @@
 # Proposta do Comitê de CI — API Java 21 + Maven
 
-> Resposta à missão `README.md:19-31` e ao desafio extra `README.md:107-113`. Pipeline implementada em `.github/workflows/ci.yaml:1` e governança em `.github/BRANCH_PROTECTION.md:1`.
+> **Nota:** o essencial desta proposta (diagramas, regras, YAML, justificativa, casos de teste e roteiro) foi **combinado e resumido no [`README.md`](../README.md)** — ver "Resolucao do Comite de CI". Este arquivo mantém a versão detalhada com linhas de referência e trade-offs longos para consulta.
+
+> Pipeline implementada em `.github/workflows/ci.yaml` e governança em `.github/BRANCH_PROTECTION.md`.
 
 ## 1. Diagnóstico do Cenário `README.md:9-17`
 
