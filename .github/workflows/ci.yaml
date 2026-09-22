@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, devs]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, devs]
 
 permissions:
   contents: read
@@ -91,8 +91,8 @@ jobs:
 
   package:
     name: Package & Publish
-    # So publicavel em push para main/master, apos todos os testes verdes
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    # So publicavel em push para main/master/devs, apos todos os testes verdes
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devs')
     needs: [unit-tests, integration-tests]
     runs-on: ubuntu-latest
     steps:
