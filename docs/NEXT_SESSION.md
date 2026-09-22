@@ -1,15 +1,14 @@
 # Handover — Próxima Sessão de Código
 
-> Atualizado 2026-09-21 23:55 (após checklist itens 1-3). Estado **verde** em `master` e `devs`.
+> Atualizado 2026-09-22 (após documentar resolução + tabela de casos no README). Estado **verde** em `master` e `devs`.
 
 ## 1. Onde estamos
 
 | Branch | HEAD | Estado | CI `ci.yaml:5` |
 |---|---|---|---|
-| `master` | `8680824` `fix(ci): restaura StatusServiceTest` | **Verde** `mvn test 19 OK` local; Actions run `35680735698` success | `push [main,master,devs]` → Compile ✅ Unit ✅ Integration ✅ Package ✅ |
-| `devs` | `5e6e0f4` `ci(devs): restaura trigger e package` | **Verde** `mvn test 45 OK` + `verify 51 OK` local; Actions run `35680910448` success | mesmos 4 jobs ✅ |
-| Branch Protection | `master` | **Ativa** via API: PR obrigatório (1 approval, dismiss stale), checks `Compile`+`Unit Tests` (strict), no force-push, no deletions, enforce_admins | — |
-| Estado limpo anterior | `b5d4323`/`cea1fc2` | referência | — |
+| `master` | `8680824` `fix(ci): restaura StatusServiceTest` | **Verde** Actions run `35680735698` success | `push [main,master,devs]` → 4 jobs ✅ |
+| `devs` | `9119257` `docs(README): resolucao...` | **Verde** `mvn test 45 OK` + `verify 51 OK`; run `35681408894` success | mesmos 4 jobs ✅ |
+| Branch Protection | `master` | **Ativa** via API: PR obrigatório (1 approval), checks `Compile`+`Unit Tests` (strict), no force-push, enforce_admins | — |
 
 ```mermaid
 gitGraph

@@ -185,17 +185,20 @@ Diferença para o ponto de partida (`.github/workflows/ci.yaml` antigo `:22-31`)
 | 2. Regras do processo | ✅ Entregue | Este doc §3 + `.github/BRANCH_PROTECTION.md:1` |
 | 3. YAML | ✅ Implementado e commitado | `.github/workflows/ci.yaml:1` (`124637b` + P3 `dc2f4ef`) |
 | 4. Justificativa | ✅ Entregue | Este doc §5 |
-| 5. Apresentação 8-10min | 🔜 Roteiro abaixo | — |
+| 5. Apresentacao 8-10min | 🔜 Roteiro abaixo | `PROPOSTA.md` §7 |
 
-### P0-P3 (testes 45 unit + 6 IT validados em `devs`)
+> **README:** resolução + tabela de casos de CI documentados em `README.md` (commit `9119257` em `devs`, run `35681408894` verde).
 
-- [x] YAML 4 jobs bloqueantes, `cache: maven`, `needs`, `api-sha`, `provenance`, split PR vs main `ci.yaml:67,95`
-- [x] Branch protection documentada `BRANCH_PROTECTION.md:13` (PR: Compile+Unit; main: +Integration+Package)
-- [x] Validação local: `mvn test 45 OK`, `mvn verify 51 OK` (6 IT + 45 unit) — ver §9 Cobertura CI
+### P0-P4 (testes 45 unit + 6 IT validados em `devs`)
+
+- [x] YAML 4 jobs bloqueantes, `cache: maven`, `needs`, `api-sha`, `provenance`, split PR vs main `ci.yaml`
+- [x] Branch protection **ativa** em `master` (PR + 1 approval + `Compile`/`Unit Tests`) — `.github/BRANCH_PROTECTION.md`
+- [x] Validação local: `mvn test 45 OK`, `mvn verify 51 OK` (6 IT + 45 unit) — ver §9
+- [x] README com resolução + tabela de casos de CI
 
 ### Próximos passos (P4)
 
-- [ ] Ativar branch protection em `Settings > Branches` (1 min, conforme `.github/BRANCH_PROTECTION.md:5`)
+- [x] Ativar branch protection em `Settings > Branches` (feito via `gh api`)
 - [ ] Slides 8-10min (roteiro sugerido §7)
 - [ ] (Opcional) `maven-git-commit-id-plugin` para expor SHA em `GET /status`
 
@@ -217,7 +220,7 @@ Diferença para o ponto de partida (`.github/workflows/ci.yaml` antigo `:22-31`)
 
 ```powershell
 # Local (reproduz a CI)
-$env:JAVA_HOME="C:\Program Files\Java\jdk-23"
+$env:JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"
 .\mvnw.cmd clean compile
 .\mvnw.cmd test        # Surefire *Test.java -> 45 OK em devs
 .\mvnw.cmd verify      # Failsafe *IT.java -> 6 IT + 45 unit = 51 OK
@@ -225,9 +228,9 @@ $env:JAVA_HOME="C:\Program Files\Java\jdk-23"
 Get-ChildItem target/*.jar
 
 # CI
-# Push em branch -> PR para main -> verificar checks verdes + artefato api-<sha>.jar
-# PR devs: Compile + Unit (~2-3min); push devs/main: + Integration + Package (~7-8min)
-# Tentar merge com teste quebrado -> botão Merge bloqueado
+# Push branch -> PR -> checks verdes + artefato api-<sha>.jar
+# PR: Compile + Unit (~2-3min); push main/master/devs: + Integration + Package (~7-8min)
+# Merge em master exige PR + 1 approval (protection ativa)
 ```
 
 ---
