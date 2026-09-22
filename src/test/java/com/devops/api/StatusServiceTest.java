@@ -10,6 +10,6 @@ class StatusServiceTest {
 	void deveRetornarMensagemDeStatus() {
 		StatusService service = new StatusService();
 
-		assertThat(service.message()).isEqualTo("mensagem quebrada para CI falhar em master");
+		assertThat(service.message()).isEqualTo("API Java 21 pronta para CI");
 	}
 }
