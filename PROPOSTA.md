@@ -194,7 +194,7 @@ Diferença para o ponto de partida (`.github/workflows/ci.yaml` antigo `:22-31`)
 ### P0-P4 (testes 45 unit + 6 IT validados em `devs`)
 
 - [x] YAML 4 jobs bloqueantes, `cache: maven`, `needs`, `api-sha`, `provenance`, split PR vs main `ci.yaml`
-- [x] Branch protection **ativa** em `master` (PR + 1 approval + `Compile`/`Unit Tests`) — `.github/BRANCH_PROTECTION.md`
+- [x] Branch protection **ativa** em `main` (PR + 1 approval + `Compile`/`Unit Tests`) — `.github/BRANCH_PROTECTION.md`
 - [x] Validação local: `mvn test 45 OK`, `mvn verify 51 OK` (6 IT + 45 unit) — ver §9
 - [x] README com resolução + tabela de casos de CI
 
@@ -231,8 +231,8 @@ Get-ChildItem target/*.jar
 
 # CI
 # Push branch -> PR -> checks verdes + artefato api-<sha>.jar
-# PR: Compile + Unit (~2-3min); push main/master/devs: + Integration + Package (~7-8min)
-# Merge em master exige PR + 1 approval (protection ativa)
+# PR: Compile + Unit (~2-3min); push main/devs: + Integration + Package (~7-8min)
+# Merge em main exige PR + 1 approval (protection ativa)
 ```
 
 ---

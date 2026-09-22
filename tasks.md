@@ -64,7 +64,7 @@ Implementado: `cache: maven` `:32,50,79,107`, `needs: compile` `:39,68` paralelo
 ## Checklist de Decisão
 
 - [x] P0 YAML bloqueante — `.github/workflows/ci.yaml:1`
-- [x] P0 Branch Protection — `.github/BRANCH_PROTECTION.md:1` (falta ativar no GitHub)
+- [x] P0 Branch Protection — `.github/BRANCH_PROTECTION.md:1` (ativa em `main` via API)
 - [x] P1 Regras — `PROPOSTA.md:60` (8 regras: ordem, bloqueio, artefato, unit vs IT `pom.xml:52-80`, checks obrigatórios `BRANCH_PROTECTION.md:13`, locais proibidos, rastreabilidade `ci.yaml:118`, tempo `ci.yaml:32`) — validado 2026-09-21
 - [x] P1 Diagrama — `PROPOSTA.md:21` (Mermaid `compile -> unit || integration -> package` + variante 22min `PROPOSTA.md:47`) — validado 2026-09-21
 - [x] P2 Justificativa — `PROPOSTA.md:149` (5 porquês com alternativa rejeitada + trade-off: JAR falho `ci.yaml:105` vs reports `ci.yaml:56`, IT `pom.xml:64` vs PR `ci.yaml:4`, PR vermelha `BRANCH_PROTECTION.md:13`, api-sha `ci.yaml:118`, velocidade `ci.yaml:32` — validado 2026-09-21)

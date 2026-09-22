@@ -193,8 +193,8 @@ flowchart TD
 ```yaml
 name: CI
 on:
-  push: { branches: [main, master, devs] }
-  pull_request: { branches: [main, master, devs] }
+  push: { branches: [main, devs] }
+  pull_request: { branches: [main, devs] }
 concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }
 jobs:
   compile:            # mvn clean compile + cache: maven
@@ -248,7 +248,7 @@ $env:JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"
 .\mvnw.cmd -B verify    # 51 OK (45 unit + 6 IT)
 ```
 
-Branch Protection ativa em `master` (PR + 1 approval + `Compile`/`Unit Tests`).
+Branch Protection ativa em `main` (PR + 1 approval + `Compile`/`Unit Tests`).
 
 ## Apresentacao (Entrega 5) — roteiro 8-10min
 
